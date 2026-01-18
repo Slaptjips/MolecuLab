@@ -1,7 +1,6 @@
 name = "moleculab"
 compatibility_date = "2026-01-18"
-
-pages_build_output_dir = "dist"
+main = "src/index.ts"
 
 [site]
 bucket = "./dist"
