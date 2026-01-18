@@ -1,10 +1,10 @@
 # MolecuLab
 
-An interactive chemistry learning sandbox for Life Sciences Education students.
+An interactive chemistry learning sandbox for students.
 
 ## Overview
 
-MolecuLab is a comprehensive web-based chemistry exploration tool designed for students in LWWA111 and FICH211 at the University of Pretoria. The application provides an engaging, interactive environment for learning fundamental chemistry concepts through hands-on experimentation.
+MolecuLab is a comprehensive web-based chemistry exploration tool that provides an engaging, interactive environment for learning fundamental chemistry concepts through hands-on experimentation.
 
 ## Features
 
@@ -70,8 +70,4 @@ MolecuLab is designed for students with limited chemistry background, providing 
 
 ## Author
 
-Wikus - University of Pretoria, Life Sciences Education
-
-## Acknowledgments
-
-Built for students in LWWA111 and FICH211 courses.
+Wikus
