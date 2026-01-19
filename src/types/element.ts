@@ -8,7 +8,8 @@ export type ElementCategory =
   | 'halogen'
   | 'noble-gas'
   | 'lanthanide'
-  | 'actinide';
+  | 'actinide'
+  | 'unknown-properties';
 
 export type Element = {
   readonly symbol: string;
@@ -26,4 +27,5 @@ export type Element = {
   readonly oxidationStates: readonly number[];
   readonly valenceElectrons: number;
   readonly uses?: readonly string[];
+  readonly alternativeNames?: Record<string, string>; // Language code -> name, e.g., { 'af': 'Waterstof' }
 };

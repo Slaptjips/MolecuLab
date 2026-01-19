@@ -16,6 +16,10 @@
   .backface-hidden {
     backface-visibility: hidden;
   }
+  .periodic-table-container {
+    width: fit-content;
+    max-width: 100%;
+  }
 }
 
 body {

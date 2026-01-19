@@ -1,29 +1,85 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePeriodicTableStore } from '../../stores/periodic-table-store';
 import type { Element } from '../../types/element';
+import { useEffect } from 'react';
 
 type ElementCardProps = {
   element: Element;
 };
 
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  'alkali-metal': { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-700' },
+  'alkaline-earth': { bg: 'bg-orange-50', border: 'border-orange-500', text: 'text-orange-700' },
+  'transition-metal': { bg: 'bg-yellow-50', border: 'border-yellow-500', text: 'text-yellow-700' },
+  'post-transition': { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-700' },
+  'metalloid': { bg: 'bg-teal-50', border: 'border-teal-500', text: 'text-teal-700' },
+  'nonmetal': { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-700' },
+  'halogen': { bg: 'bg-indigo-50', border: 'border-indigo-500', text: 'text-indigo-700' },
+  'noble-gas': { bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-700' },
+  'lanthanide': { bg: 'bg-pink-50', border: 'border-pink-500', text: 'text-pink-700' },
+  'actinide': { bg: 'bg-[#C64484]/10', border: 'border-[#C64484]', text: 'text-[#C64484]' },
+  'unknown-properties': { bg: 'bg-gray-50', border: 'border-gray-500', text: 'text-gray-700' },
+};
+
 const ElementCard = ({ element }: ElementCardProps) => {
   const { dispatch } = usePeriodicTableStore();
+  const colors = CATEGORY_COLORS[element.category] || CATEGORY_COLORS['nonmetal'];
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dispatch({ type: 'SELECT_ELEMENT', payload: null });
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [dispatch]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500"
-    >
+    <AnimatePresence>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => dispatch({ type: 'SELECT_ELEMENT', payload: null })}
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      >
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          onClick={(e) => e.stopPropagation()}
+          className={`bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-l-4 ${colors.border} ${colors.bg}`}
+        >
       <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-3xl font-bold text-gray-800">{element.name}</h3>
-          <p className="text-2xl text-gray-600 mt-1">{element.symbol}</p>
+        <div className="flex-1 flex gap-4">
+          <div>
+            <h3 className="text-3xl font-bold text-gray-800">{element.name}</h3>
+            <p className="text-2xl text-gray-600 mt-1">{element.symbol}</p>
+          </div>
+          {/* Alternative Names - moved to the right */}
+          {element.alternativeNames && Object.keys(element.alternativeNames).length > 0 && (
+            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex-shrink-0">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Alternative Names:</p>
+              <div className="space-y-1.5">
+                {Object.entries(element.alternativeNames).map(([lang, name]) => (
+                  <p key={lang} className="text-base text-gray-800">
+                    <span className="font-semibold capitalize mr-2">
+                      {lang === 'af' ? 'Afrikaans' : lang === 'latin' ? 'Latin' : lang}:
+                    </span>
+                    <span className="italic">{name}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <button
           onClick={() => dispatch({ type: 'SELECT_ELEMENT', payload: null })}
-          className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+          className={`${colors.text} hover:opacity-70 text-3xl font-bold leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-50 transition-colors flex-shrink-0 ml-4`}
           aria-label="Close"
         >
           ×
@@ -117,7 +173,9 @@ const ElementCard = ({ element }: ElementCardProps) => {
           </ul>
         </div>
       )}
-    </motion.div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

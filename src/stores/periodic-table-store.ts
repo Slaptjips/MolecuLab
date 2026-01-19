@@ -9,6 +9,8 @@ type PeriodicTableState = {
   readonly activeTrend: TrendType;
   readonly filter: FilterType;
   readonly searchQuery: string;
+  readonly selectedGroup: number | null;
+  readonly selectedPeriod: number | null;
 };
 
 type PeriodicTableAction =
@@ -16,6 +18,8 @@ type PeriodicTableAction =
   | { type: 'SHOW_TREND'; payload: TrendType }
   | { type: 'SET_FILTER'; payload: FilterType }
   | { type: 'SET_SEARCH'; payload: string }
+  | { type: 'SELECT_GROUP'; payload: number | null }
+  | { type: 'SELECT_PERIOD'; payload: number | null }
   | { type: 'CLEAR_FILTERS' };
 
 const initialState: PeriodicTableState = {
@@ -23,6 +27,8 @@ const initialState: PeriodicTableState = {
   activeTrend: null,
   filter: null,
   searchQuery: '',
+  selectedGroup: null,
+  selectedPeriod: null,
 };
 
 const update = (state: PeriodicTableState, action: PeriodicTableAction): PeriodicTableState => {
@@ -46,6 +52,18 @@ const update = (state: PeriodicTableState, action: PeriodicTableAction): Periodi
       return {
         ...state,
         searchQuery: action.payload,
+      };
+    case 'SELECT_GROUP':
+      return {
+        ...state,
+        selectedGroup: action.payload === state.selectedGroup ? null : action.payload,
+        selectedPeriod: null, // Clear period when group is selected
+      };
+    case 'SELECT_PERIOD':
+      return {
+        ...state,
+        selectedPeriod: action.payload === state.selectedPeriod ? null : action.payload,
+        selectedGroup: null, // Clear group when period is selected
       };
     case 'CLEAR_FILTERS':
       return {

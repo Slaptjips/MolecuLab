@@ -3,17 +3,20 @@ import Draggable from 'react-draggable';
 import { useBondingStore } from '../../stores/bonding-store';
 import { validateBond } from '../../utils/bonding-logic';
 import { motion } from 'framer-motion';
+import { getElementByAtomicNumber } from '../../data/elements';
 
 const BondingCanvas = () => {
   const { atoms, bonds, viewMode, dispatch } = useBondingStore();
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleAtomDrag = (atomId: string, x: number, y: number) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const canvasX = x - rect.left;
-    const canvasY = y - rect.top;
-    dispatch({ type: 'MOVE_ATOM', payload: { id: atomId, x: canvasX, y: canvasY } });
+    // react-draggable's data.x and data.y are relative to where the drag started
+    // Since we're using controlled position with position={{ x: atom.x, y: atom.y }},
+    // the x and y values are already the new absolute positions
+    // Clamp to prevent negative values
+    const clampedX = Math.max(0, x);
+    const clampedY = Math.max(0, y);
+    dispatch({ type: 'MOVE_ATOM', payload: { id: atomId, x: clampedX, y: clampedY } });
   };
 
   const getBondCoordinates = (bond: typeof bonds[number]) => {
@@ -30,10 +33,42 @@ const BondingCanvas = () => {
     return validateBond(atom1.element, atom2.element);
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!canvasRef.current) return;
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      const element = getElementByAtomicNumber(data.atomicNumber);
+      
+      if (element) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        // Center the atom on the drop point (atoms are 64px = w-16 h-16, so center offset is 32px)
+        const x = e.clientX - rect.left - 32;
+        const y = e.clientY - rect.top - 32;
+        
+        dispatch({
+          type: 'ADD_ATOM',
+          payload: { element, x, y },
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing drag data:', error);
+    }
+  };
+
   return (
     <div
       ref={canvasRef}
-      className="bonding-canvas relative bg-gray-50 rounded-lg shadow-inner border-2 border-gray-300 min-h-[600px] w-full"
+      className="bonding-canvas relative bg-gray-50 rounded-lg shadow-inner border-2 border-gray-300 h-full w-full"
+      style={{ zIndex: 1, position: 'relative' }}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       onClick={(e) => {
         // Deselect on canvas click
         if (e.target === canvasRef.current) {
@@ -106,8 +141,9 @@ const BondingCanvas = () => {
                 absolute w-16 h-16 rounded-full border-4 border-white shadow-lg
                 flex flex-col items-center justify-center cursor-move
                 ${bgColor}
-                hover:scale-110 transition-transform z-10
+                transition-transform
               `}
+              style={{ zIndex: 10 }}
               whileHover={{ scale: 1.1 }}
               whileDrag={{ scale: 1.15, zIndex: 20 }}
               onClick={(e) => {
