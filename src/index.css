@@ -22,6 +22,24 @@
   }
 }
 
+@media (max-width: 768px) {
+  .periodic-table-container {
+    min-width: 900px; /* Ensure table is wide enough to scroll on mobile */
+  }
+  
+  .periodic-table-header-row,
+  .periodic-table-row {
+    grid-template-columns: repeat(18, minmax(30px, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .periodic-table-header-row,
+  .periodic-table-row {
+    grid-template-columns: repeat(18, minmax(50px, 1fr)) !important;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

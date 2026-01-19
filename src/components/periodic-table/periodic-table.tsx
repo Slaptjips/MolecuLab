@@ -56,30 +56,28 @@ const PeriodicTable = () => {
 
       const tableRect = table.getBoundingClientRect();
 
-      // Use viewport width to prevent horizontal scrolling on the page
-      // Smaller margin on mobile, larger on desktop
+      // On mobile, allow horizontal scrolling instead of scaling
       const isMobile = window.innerWidth < 768;
-      const margin = isMobile ? 32 : 100;
-      const availableWidth = window.innerWidth - margin;
       
-      const naturalWidth = tableRect.width || table.scrollWidth;
+      if (isMobile) {
+        // On mobile, use smaller scale to allow scrolling
+        setScale(0.45); // Smaller scale for mobile to keep tiles readable but allow scroll
+      } else {
+        // Desktop: scale to fit
+        const margin = 100;
+        const availableWidth = window.innerWidth - margin;
+        const naturalWidth = tableRect.width || table.scrollWidth;
 
-      if (naturalWidth === 0) {
-        // Restore if measurement failed
-        table.style.transform = originalTransform;
-        return;
+        if (naturalWidth === 0) {
+          table.style.transform = originalTransform;
+          return;
+        }
+
+        const scaleX = (availableWidth * 0.98) / naturalWidth;
+        const newScale = Math.min(scaleX, 1.1);
+        const finalScale = Math.max(newScale, 0.7);
+        setScale(finalScale);
       }
-
-      // Calculate scale factors
-      // Only scale based on width to prevent horizontal scrolling
-      // Allow vertical scrolling for height
-      const scaleX = (availableWidth * 0.98) / naturalWidth; // 98% to leave small margin
-      
-      // Use width-based scale only, with reasonable bounds
-      const newScale = Math.min(scaleX, 1.1); // Max 1.1x to prevent tiles from getting too large
-      const finalScale = Math.max(newScale, 0.7); // Min 0.7x to ensure tiles are large enough for text
-
-      setScale(finalScale);
       
       // Restore width/height
       table.style.width = '';
@@ -528,9 +526,12 @@ const PeriodicTable = () => {
         {/* Periodic Table Grid */}
         <div 
           ref={containerRef} 
-          className="w-full flex items-start justify-center py-4" 
+          className="w-full py-4" 
           style={{ 
-            overflowX: 'hidden'
+            overflowX: 'auto',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            maxHeight: '70vh'
           }}
         >
           <div 
@@ -538,7 +539,7 @@ const PeriodicTable = () => {
             className="space-y-1 periodic-table-container"
             style={{ 
               transform: `scale(${scale})`,
-              transformOrigin: 'top center',
+              transformOrigin: 'top left',
               width: 'fit-content',
               height: 'fit-content'
             }}
@@ -546,7 +547,7 @@ const PeriodicTable = () => {
               {/* Group number labels (top) - aligned with period label column */}
               <div className="flex items-center gap-1 mb-1">
                 <div className="w-8"></div>
-                <div className="grid grid-cols-18 gap-1 flex-1" style={{ gridTemplateColumns: 'repeat(18, minmax(50px, 1fr))' }}>
+                <div className="grid grid-cols-18 gap-1 flex-1 periodic-table-header-row">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((groupNum) => {
                     const romanNum = toRomanNumeral(groupNum);
                     return (
@@ -584,8 +585,7 @@ const PeriodicTable = () => {
                   </button>
                   {/* Elements row */}
                   <div
-                    className="grid grid-cols-18 gap-1 flex-1"
-                    style={{ gridTemplateColumns: 'repeat(18, minmax(0, 1fr))' }}
+                    className="grid grid-cols-18 gap-1 flex-1 periodic-table-row"
                   >
                     {Array.from({ length: 18 }).map((_, colIndex) => {
                       const col = colIndex + 1;
@@ -620,8 +620,7 @@ const PeriodicTable = () => {
                   Ln
                 </button>
                 <div
-                  className="grid grid-cols-18 gap-1 flex-1"
-                  style={{ gridTemplateColumns: 'repeat(18, minmax(0, 1fr))' }}
+                  className="grid grid-cols-18 gap-1 flex-1 periodic-table-row"
                 >
                   {Array.from({ length: 18 }).map((_, colIndex) => {
                     const col = colIndex + 1;
@@ -652,8 +651,7 @@ const PeriodicTable = () => {
                   An
                 </button>
                 <div
-                  className="grid grid-cols-18 gap-1 flex-1"
-                  style={{ gridTemplateColumns: 'repeat(18, minmax(0, 1fr))' }}
+                  className="grid grid-cols-18 gap-1 flex-1 periodic-table-row"
                 >
                   {Array.from({ length: 18 }).map((_, colIndex) => {
                     const col = colIndex + 1;
