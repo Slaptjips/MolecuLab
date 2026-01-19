@@ -14,8 +14,8 @@ const StudyTools = () => {
   ];
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="p-4 md:p-8 space-y-4 md:space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Study Tools</h2>
         <p className="text-gray-600 mb-6">
           Flashcards and formula reference sheet for chemistry study.

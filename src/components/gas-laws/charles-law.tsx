@@ -59,7 +59,7 @@ const CharlesLaw = () => {
         At constant pressure, volume and temperature are directly proportional. Temperature must be in Kelvin!
       </p>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">V₁ (L)</label>
           <input

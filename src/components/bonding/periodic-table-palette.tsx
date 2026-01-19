@@ -133,6 +133,25 @@ const getElementGridPosition = (atomicNumber: number): { row: number; col: numbe
 };
 
 const PeriodicTablePalette = () => {
+  // Mobile touch handler: store element for tap-to-add
+  const handleTouchStart = (e: React.TouchEvent, element: typeof ELEMENTS[number]) => {
+    // Store element globally for mobile tap-to-add
+    (window as any).__pendingElement = {
+      atomicNumber: element.atomicNumber,
+      symbol: element.symbol,
+      name: element.name
+    };
+    // Show visual feedback
+    e.currentTarget.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Remove visual feedback after a short delay
+    setTimeout(() => {
+      e.currentTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+    }, 300);
+  };
+
   const handleDragStart = (e: React.DragEvent, element: typeof ELEMENTS[number]) => {
     // Store element data in the drag event
     e.dataTransfer.setData('application/json', JSON.stringify({ 
@@ -207,9 +226,9 @@ const PeriodicTablePalette = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col" style={{ overflow: 'visible' }}>
-      <div className="flex-shrink-0 mb-3">
-        <h3 className="text-lg font-semibold text-gray-800">Periodic Table</h3>
+    <div className="bg-white rounded-lg shadow-md p-2 md:p-4 h-full flex flex-col" style={{ overflow: 'visible' }}>
+      <div className="flex-shrink-0 mb-2 md:mb-3">
+        <h3 className="text-base md:text-lg font-semibold text-gray-800">Periodic Table</h3>
         <p className="text-xs text-gray-500">Drag elements to the canvas</p>
       </div>
       <div className="flex-1" style={{ overflow: 'auto', position: 'relative' }}>
@@ -232,7 +251,9 @@ const PeriodicTablePalette = () => {
                   key={element.atomicNumber}
                   draggable
                   onDragStart={(e) => handleDragStart(e, element)}
-                  className={`cursor-move aspect-square rounded text-center flex flex-col items-center justify-center transition-all hover:scale-110 hover:z-10 hover:shadow-lg ${
+                  onTouchStart={(e) => handleTouchStart(e, element)}
+                  onTouchEnd={handleTouchEnd}
+                  className={`cursor-move aspect-square rounded text-center flex flex-col items-center justify-center transition-all hover:scale-110 active:scale-95 hover:z-10 hover:shadow-lg touch-manipulation ${
                     typeof categoryColor === 'string' ? categoryColor : ''
                   }`}
                   style={{

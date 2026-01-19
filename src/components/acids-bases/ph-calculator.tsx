@@ -102,7 +102,7 @@ const PHCalculator = () => {
       {calculationResult?.success && (
         <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
           <h4 className="font-semibold text-blue-800 mb-3">Results</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-700 font-medium">pH:</span>
               <div className="text-lg font-bold text-blue-800">{calculationResult.data.pH.toFixed(2)}</div>

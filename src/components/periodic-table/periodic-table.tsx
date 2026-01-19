@@ -57,7 +57,10 @@ const PeriodicTable = () => {
       const tableRect = table.getBoundingClientRect();
 
       // Use viewport width to prevent horizontal scrolling on the page
-      const availableWidth = window.innerWidth - 100; // Leave margin for padding
+      // Smaller margin on mobile, larger on desktop
+      const isMobile = window.innerWidth < 768;
+      const margin = isMobile ? 32 : 100;
+      const availableWidth = window.innerWidth - margin;
       
       const naturalWidth = tableRect.width || table.scrollWidth;
 
@@ -391,9 +394,9 @@ const PeriodicTable = () => {
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Periodic Table of Elements</h2>
+    <div className="p-4 md:p-8 space-y-4 md:space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">Periodic Table of Elements</h2>
         
         {/* Controls */}
         <div className="mb-6 space-y-4">

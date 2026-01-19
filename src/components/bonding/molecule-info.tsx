@@ -125,7 +125,7 @@ const MoleculeInfo = () => {
       {/* Example Molecules */}
       <div className="mt-6 pt-4 border-t border-gray-200">
         <span className="text-sm font-semibold text-gray-500 block mb-2">Example Molecules</span>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {[
             { name: 'H₂O', atoms: [{ symbol: 'H', x: 200, y: 200 }, { symbol: 'O', x: 250, y: 200 }, { symbol: 'H', x: 300, y: 200 }] },
             { name: 'CO₂', atoms: [{ symbol: 'C', x: 250, y: 200 }, { symbol: 'O', x: 200, y: 200 }, { symbol: 'O', x: 300, y: 200 }] },

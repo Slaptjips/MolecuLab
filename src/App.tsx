@@ -64,9 +64,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-3xl font-bold text-blue-600">MolecuLab</h1>
-          <p className="text-sm text-gray-600 mt-1">Chemistry Learning Sandbox</p>
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-blue-600">MolecuLab</h1>
+          <p className="text-xs md:text-sm text-gray-600 mt-1">Chemistry Learning Sandbox</p>
         </div>
       </header>
       <TabNavigation

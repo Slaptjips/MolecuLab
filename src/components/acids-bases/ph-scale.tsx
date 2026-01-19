@@ -68,7 +68,7 @@ const PHScale = () => {
         </div>
 
         {/* Examples */}
-        <div className="grid grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">Acidic Examples</h4>
             <div className="space-y-1 text-sm">

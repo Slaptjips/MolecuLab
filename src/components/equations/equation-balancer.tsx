@@ -72,7 +72,7 @@ const EquationBalancer = () => {
       {/* Atom Counts */}
       <div className="bg-blue-50 rounded-lg p-4">
         <h4 className="font-semibold text-gray-800 mb-3">Atom Counts</h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <h5 className="font-medium text-gray-700 mb-2">Reactants</h5>
             <div className="space-y-1">

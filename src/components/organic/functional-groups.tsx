@@ -9,7 +9,7 @@ const FunctionalGroups = () => {
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Functional Groups</h3>
       <p className="text-sm text-gray-600 mb-4">Click on a functional group to see details</p>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {FUNCTIONAL_GROUPS.map((group) => (
           <button
             key={group.name}

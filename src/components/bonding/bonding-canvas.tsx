@@ -62,6 +62,31 @@ const BondingCanvas = () => {
     }
   };
 
+  // Mobile touch handler: add atom at tap position
+  const handleCanvasTouch = (e: React.TouchEvent) => {
+    if (!canvasRef.current) return;
+    const touch = e.touches[0] || e.changedTouches[0];
+    if (!touch) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = touch.clientX - rect.left - 32;
+    const y = touch.clientY - rect.top - 32;
+
+    // Check if we have a pending element from the palette
+    const pendingElement = (window as any).__pendingElement;
+    if (pendingElement) {
+      const element = getElementByAtomicNumber(pendingElement.atomicNumber);
+      if (element) {
+        dispatch({
+          type: 'ADD_ATOM',
+          payload: { element, x, y },
+        });
+      }
+      (window as any).__pendingElement = null;
+      e.preventDefault();
+    }
+  };
+
   return (
     <div
       ref={canvasRef}
@@ -69,6 +94,7 @@ const BondingCanvas = () => {
       style={{ zIndex: 1, position: 'relative' }}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onTouchEnd={handleCanvasTouch}
       onClick={(e) => {
         // Deselect on canvas click
         if (e.target === canvasRef.current) {

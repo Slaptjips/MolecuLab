@@ -130,7 +130,7 @@ const TitrationCurve = () => {
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Titration Curve Simulator</h3>
 
       {/* Input Parameters */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Acid Type</label>
           <select

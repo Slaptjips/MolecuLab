@@ -67,7 +67,7 @@ const GroupPeriodCard = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-l-4 border-blue-500"
+          className="bg-white rounded-lg shadow-2xl p-4 md:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-l-4 border-blue-500"
         >
           <div className="flex justify-between items-start mb-4">
             <div>
