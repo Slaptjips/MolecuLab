@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Atom, Bond, Molecule } from '../types/molecule';
 import type { Element } from '../types/element';
+import { validateBond } from '../utils/bonding-logic';
+import { calculateBondOrder, determineCompoundType } from '../utils/bond-order';
 
 type BondingState = {
   readonly atoms: readonly Atom[];
@@ -15,6 +17,7 @@ type BondingAction =
   | { type: 'REMOVE_ATOM'; payload: string }
   | { type: 'FORM_BOND'; payload: { atom1Id: string; atom2Id: string } }
   | { type: 'REMOVE_BOND'; payload: string }
+  | { type: 'SET_BOND_ORDER'; payload: { bondId: string; order: 1 | 2 | 3 } }
   | { type: 'TOGGLE_VIEW' }
   | { type: 'SELECT_ATOM'; payload: string | null }
   | { type: 'CLEAR_MOLECULE' }
@@ -68,12 +71,24 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
                   (b.atom1Id === otherAtom.id && b.atom2Id === movedAtom.id)
               );
               if (!bondExists) {
+                // Calculate bond order automatically
+                const bondInfo = validateBond(movedAtom.element, otherAtom.element);
+                const bondOrder = calculateBondOrder(
+                  movedAtom.element,
+                  otherAtom.element,
+                  state.bonds.filter((b) => b.atom1Id === movedAtom.id || b.atom2Id === movedAtom.id),
+                  state.bonds.filter((b) => b.atom1Id === otherAtom.id || b.atom2Id === otherAtom.id),
+                  state.bonds
+                );
+
                 newBonds.push({
                   id: `bond-${Date.now()}-${Math.random()}`,
                   atom1Id: movedAtom.id,
                   atom2Id: otherAtom.id,
-                  type: null,
-                  electrons: 2,
+                  type: bondInfo.bondType,
+                  electrons: 2 * bondOrder,
+                  order: bondOrder,
+                  isManual: false,
                 });
               }
             }
@@ -107,6 +122,20 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
       if (bondExists) {
         return state;
       }
+
+      const atom1 = state.atoms.find((a) => a.id === action.payload.atom1Id);
+      const atom2 = state.atoms.find((a) => a.id === action.payload.atom2Id);
+      if (!atom1 || !atom2) return state;
+
+      const bondInfo = validateBond(atom1.element, atom2.element);
+      const bondOrder = calculateBondOrder(
+        atom1.element,
+        atom2.element,
+        state.bonds.filter((b) => b.atom1Id === atom1.id || b.atom2Id === atom1.id),
+        state.bonds.filter((b) => b.atom1Id === atom2.id || b.atom2Id === atom2.id),
+        state.bonds
+      );
+
       return {
         ...state,
         bonds: [
@@ -115,10 +144,23 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
             id: `bond-${Date.now()}-${Math.random()}`,
             atom1Id: action.payload.atom1Id,
             atom2Id: action.payload.atom2Id,
-            type: null,
-            electrons: 2,
+            type: bondInfo.bondType,
+            electrons: 2 * bondOrder,
+            order: bondOrder,
+            isManual: false,
           },
         ],
+      };
+    }
+
+    case 'SET_BOND_ORDER': {
+      return {
+        ...state,
+        bonds: state.bonds.map((b) =>
+          b.id === action.payload.bondId
+            ? { ...b, order: action.payload.order, electrons: 2 * action.payload.order, isManual: true }
+            : b
+        ),
       };
     }
 
@@ -169,6 +211,7 @@ export const useBondingStore = create<BondingStore>((set, get) => ({
     const formula = calculateFormula(state.atoms);
     const charge = calculateCharge(state.atoms, state.bonds);
     const isStable = Math.abs(charge) === 0;
+    const compoundType = determineCompoundType(state.bonds, state.atoms);
 
     return {
       atoms: state.atoms,
@@ -176,6 +219,8 @@ export const useBondingStore = create<BondingStore>((set, get) => ({
       charge,
       formula,
       name: null,
+      iupacName: null,
+      compoundType,
       isStable,
       shape: null,
       polarity: null,

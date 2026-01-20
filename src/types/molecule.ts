@@ -15,6 +15,8 @@ export type Bond = {
   readonly atom2Id: string;
   readonly type: BondType;
   readonly electrons: number;
+  readonly order: 1 | 2 | 3; // Single, double, or triple bond
+  readonly isManual?: boolean; // Whether bond order was manually set
 };
 
 export type Molecule = {
@@ -23,6 +25,8 @@ export type Molecule = {
   readonly charge: number;
   readonly formula: string;
   readonly name: string | null;
+  readonly iupacName: string | null;
+  readonly compoundType: 'ionic' | 'covalent' | 'mixed' | null;
   readonly isStable: boolean;
   readonly shape: string | null;
   readonly polarity: 'polar' | 'nonpolar' | null;

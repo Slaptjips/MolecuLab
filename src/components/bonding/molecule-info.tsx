@@ -1,14 +1,36 @@
+import { useEffect, useState } from 'react';
 import { useBondingStore } from '../../stores/bonding-store';
 import { validateBond } from '../../utils/bonding-logic';
-import { getMolecularShape } from '../../utils/bonding-logic';
+import { getIUPACName } from '../../utils/iupac-naming';
 
 const MoleculeInfo = () => {
   const { atoms, bonds, viewMode, dispatch, getMolecule } = useBondingStore();
   const molecule = getMolecule();
+  const [iupacName, setIupacName] = useState<string | null>(null);
+  const [loadingName, setLoadingName] = useState(false);
+
+  // Fetch IUPAC name when molecule changes
+  useEffect(() => {
+    if (atoms.length === 0) {
+      setIupacName(null);
+      return;
+    }
+
+    setLoadingName(true);
+    getIUPACName(atoms, bonds)
+      .then((name) => {
+        setIupacName(name);
+        setLoadingName(false);
+      })
+      .catch(() => {
+        setIupacName(null);
+        setLoadingName(false);
+      });
+  }, [atoms, bonds]);
 
   if (atoms.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Molecule Information</h3>
         <p className="text-gray-500">Add atoms to build a molecule</p>
       </div>
@@ -33,15 +55,14 @@ const MoleculeInfo = () => {
     atom2: typeof atoms[number];
   }>;
 
-  // Calculate molecular shape (simplified - assume first atom is central)
-  const centralAtom = atoms[0];
-  const bondedAtoms = bonds.filter((b) => b.atom1Id === centralAtom?.id || b.atom2Id === centralAtom?.id).length;
-  const shape = centralAtom
-    ? getMolecularShape(centralAtom.element, bondedAtoms, 0)
-    : null;
+  const bondOrderLabels = {
+    1: 'Single',
+    2: 'Double',
+    3: 'Triple',
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Molecule Information</h3>
 
       {/* Formula */}
@@ -49,6 +70,28 @@ const MoleculeInfo = () => {
         <span className="text-sm font-semibold text-gray-500">Formula</span>
         <p className="text-2xl font-bold text-gray-800 mt-1">{molecule.formula}</p>
       </div>
+
+      {/* IUPAC Name */}
+      <div className="mb-4">
+        <span className="text-sm font-semibold text-gray-500">IUPAC Name</span>
+        {loadingName ? (
+          <p className="text-gray-500 italic mt-1">Loading...</p>
+        ) : iupacName ? (
+          <p className="text-lg font-medium text-gray-800 mt-1">{iupacName}</p>
+        ) : (
+          <p className="text-gray-500 italic mt-1">Name not available</p>
+        )}
+      </div>
+
+      {/* Compound Type (Ionic/Covalent) */}
+      {molecule.compoundType && (
+        <div className="mb-4">
+          <span className="text-sm font-semibold text-gray-500">Compound Type</span>
+          <p className="text-lg font-medium text-gray-800 mt-1 capitalize">
+            {molecule.compoundType}
+          </p>
+        </div>
+      )}
 
       {/* Stability */}
       <div className="mb-4">
@@ -70,14 +113,6 @@ const MoleculeInfo = () => {
         </div>
       </div>
 
-      {/* Molecular Shape */}
-      {shape && (
-        <div className="mb-4">
-          <span className="text-sm font-semibold text-gray-500">Molecular Shape</span>
-          <p className="text-lg font-medium text-gray-800 mt-1">{shape}</p>
-        </div>
-      )}
-
       {/* Bond Information */}
       {bondAnalyses.length > 0 && (
         <div className="mb-4">
@@ -86,13 +121,37 @@ const MoleculeInfo = () => {
             {bondAnalyses.map(({ bond, analysis, atom1, atom2 }) => (
               <div
                 key={bond.id}
-                className="bg-gray-50 rounded p-2 text-sm"
+                className="bg-gray-50 rounded p-3 text-sm"
               >
-                <div className="font-medium">
+                <div className="font-medium mb-1">
                   {atom1.element.symbol} - {atom2.element.symbol}
                 </div>
-                <div className="text-gray-600">{analysis.bondType} bond</div>
-                <div className="text-xs text-gray-500 mt-1">{analysis.explanation}</div>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-gray-600 capitalize">
+                    {bondOrderLabels[bond.order]} {analysis.bondType} bond
+                  </span>
+                  {bond.isManual && (
+                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Manual</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 mb-2">{analysis.explanation}</div>
+                {/* Manual bond order control */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-gray-600">Bond order:</span>
+                  {([1, 2, 3] as const).map((order) => (
+                    <button
+                      key={order}
+                      onClick={() => dispatch({ type: 'SET_BOND_ORDER', payload: { bondId: bond.id, order } })}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        bond.order === order
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {order}
+                    </button>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
