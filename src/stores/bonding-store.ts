@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import type { Atom, Bond, Molecule } from '../types/molecule';
 import type { Element } from '../types/element';
 import { validateBond } from '../utils/bonding-logic';
-import { calculateBondOrder, determineCompoundType } from '../utils/bond-order';
+import { determineCompoundType } from '../utils/bond-order';
 import { canFormBond, canIncreaseBondOrder } from '../utils/bond-validation';
+import { shouldFormBond, calculateOptimalBondOrder } from '../utils/molecular-geometry';
 
 type BondingState = {
   readonly atoms: readonly Atom[];
@@ -65,32 +66,42 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
               Math.pow(movedAtom.x - otherAtom.x, 2) + Math.pow(movedAtom.y - otherAtom.y, 2)
             );
             if (distance < BOND_DISTANCE_THRESHOLD) {
-              // Validate if bond can be formed
-              const validation = canFormBond(movedAtom, otherAtom, state.bonds);
+              // First check basic bond validation (max bonds, etc.)
+              const basicValidation = canFormBond(movedAtom, otherAtom, state.bonds);
               
-              if (validation.canForm) {
-                // Calculate bond order automatically
-                const bondInfo = validateBond(movedAtom.element, otherAtom.element);
-                const bondOrder = calculateBondOrder(
-                  movedAtom.element,
-                  otherAtom.element,
-                  state.bonds.filter((b) => b.atom1Id === movedAtom.id || b.atom2Id === movedAtom.id),
-                  state.bonds.filter((b) => b.atom1Id === otherAtom.id || b.atom2Id === otherAtom.id),
-                  state.bonds
-                );
-
-                newBonds.push({
-                  id: `bond-${Date.now()}-${Math.random()}`,
-                  atom1Id: movedAtom.id,
-                  atom2Id: otherAtom.id,
-                  type: bondInfo.bondType,
-                  electrons: 2 * bondOrder,
-                  order: bondOrder,
-                  isManual: false,
-                });
+              if (!basicValidation.canForm) {
+                continue; // Skip if basic validation fails
               }
-              // If validation fails, silently skip bond formation
-              // (could show user feedback here in the future)
+
+              // Then check molecular geometry (electron placement, central atom, etc.)
+              const geometryValidation = shouldFormBond(
+                movedAtom,
+                otherAtom,
+                updatedAtoms,
+                state.bonds
+              );
+
+              if (!geometryValidation.shouldForm) {
+                continue; // Skip if geometry validation fails
+              }
+
+              // Calculate bond order based on available electrons
+              const bondInfo = validateBond(movedAtom.element, otherAtom.element);
+              const bondOrder = calculateOptimalBondOrder(
+                movedAtom,
+                otherAtom,
+                state.bonds
+              );
+
+              newBonds.push({
+                id: `bond-${Date.now()}-${Math.random()}`,
+                atom1Id: movedAtom.id,
+                atom2Id: otherAtom.id,
+                type: bondInfo.bondType,
+                electrons: 2 * bondOrder,
+                order: bondOrder,
+                isManual: false,
+              });
             }
           }
         }
@@ -118,20 +129,20 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
       const atom2 = state.atoms.find((a) => a.id === action.payload.atom2Id);
       if (!atom1 || !atom2) return state;
 
-      // Validate if bond can be formed
-      const validation = canFormBond(atom1, atom2, state.bonds);
-      if (!validation.canForm) {
-        return state; // Don't form bond if validation fails
+      // Basic validation (max bonds, etc.)
+      const basicValidation = canFormBond(atom1, atom2, state.bonds);
+      if (!basicValidation.canForm) {
+        return state;
+      }
+
+      // Molecular geometry validation (electron placement, central atom)
+      const geometryValidation = shouldFormBond(atom1, atom2, state.atoms, state.bonds);
+      if (!geometryValidation.shouldForm) {
+        return state;
       }
 
       const bondInfo = validateBond(atom1.element, atom2.element);
-      const bondOrder = calculateBondOrder(
-        atom1.element,
-        atom2.element,
-        state.bonds.filter((b) => b.atom1Id === atom1.id || b.atom2Id === atom1.id),
-        state.bonds.filter((b) => b.atom1Id === atom2.id || b.atom2Id === atom2.id),
-        state.bonds
-      );
+      const bondOrder = calculateOptimalBondOrder(atom1, atom2, state.bonds);
 
       return {
         ...state,
