@@ -11,7 +11,7 @@ export const calculateBondOrder = (
   atom2: Element,
   atom1Bonds: readonly Bond[],
   atom2Bonds: readonly Bond[],
-  allBonds: readonly Bond[]
+  _allBonds: readonly Bond[] // Used for future enhancements
 ): 1 | 2 | 3 => {
   // Count electrons already used in bonds (excluding the new bond we're calculating)
   const getUsedElectrons = (bonds: readonly Bond[]): number => {

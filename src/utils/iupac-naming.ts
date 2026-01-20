@@ -5,7 +5,7 @@ import type { Atom, Bond } from '../types/molecule';
  * Simplified implementation for common molecules
  * Pure function - no side effects
  */
-export const moleculeToSMILES = (atoms: readonly Atom[], bonds: readonly Bond[]): string | null => {
+export const moleculeToSMILES = (atoms: readonly Atom[], _bonds: readonly Bond[]): string | null => {
   if (atoms.length === 0) return null;
 
   // Simple SMILES generation for common molecules
@@ -99,7 +99,7 @@ export const getIUPACName = async (
  * Get common name for simple molecules
  * Pure function - no side effects
  */
-const getCommonName = (atoms: readonly Atom[], bonds: readonly Bond[]): string | null => {
+const getCommonName = (atoms: readonly Atom[], _bonds: readonly Bond[]): string | null => {
   const counts: Record<string, number> = {};
   for (const atom of atoms) {
     counts[atom.element.symbol] = (counts[atom.element.symbol] || 0) + 1;

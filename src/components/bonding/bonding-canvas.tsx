@@ -9,7 +9,6 @@ const BondingCanvas = () => {
   const { atoms, bonds, viewMode, dispatch } = useBondingStore();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
 
   // Custom drag handler using mouse/touch events
   const handleMouseDown = useCallback((e: React.MouseEvent | React.TouchEvent, atomId: string) => {
@@ -27,7 +26,6 @@ const BondingCanvas = () => {
     const offsetY = clientY - rect.top - atom.y - 32;
 
     setDraggingId(atomId);
-    setDragOffset({ x: offsetX, y: offsetY });
     dispatch({ type: 'SELECT_ATOM', payload: atomId });
 
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
@@ -47,7 +45,6 @@ const BondingCanvas = () => {
 
     const handleEnd = () => {
       setDraggingId(null);
-      setDragOffset(null);
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchmove', handleMove);
