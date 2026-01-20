@@ -3,6 +3,7 @@ import type { Atom, Bond, Molecule } from '../types/molecule';
 import type { Element } from '../types/element';
 import { validateBond } from '../utils/bonding-logic';
 import { calculateBondOrder, determineCompoundType } from '../utils/bond-order';
+import { canFormBond, canIncreaseBondOrder } from '../utils/bond-validation';
 
 type BondingState = {
   readonly atoms: readonly Atom[];
@@ -64,13 +65,10 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
               Math.pow(movedAtom.x - otherAtom.x, 2) + Math.pow(movedAtom.y - otherAtom.y, 2)
             );
             if (distance < BOND_DISTANCE_THRESHOLD) {
-              // Check if bond already exists
-              const bondExists = state.bonds.some(
-                (b) =>
-                  (b.atom1Id === movedAtom.id && b.atom2Id === otherAtom.id) ||
-                  (b.atom1Id === otherAtom.id && b.atom2Id === movedAtom.id)
-              );
-              if (!bondExists) {
+              // Validate if bond can be formed
+              const validation = canFormBond(movedAtom, otherAtom, state.bonds);
+              
+              if (validation.canForm) {
                 // Calculate bond order automatically
                 const bondInfo = validateBond(movedAtom.element, otherAtom.element);
                 const bondOrder = calculateBondOrder(
@@ -91,6 +89,8 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
                   isManual: false,
                 });
               }
+              // If validation fails, silently skip bond formation
+              // (could show user feedback here in the future)
             }
           }
         }
@@ -114,18 +114,15 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
     }
 
     case 'FORM_BOND': {
-      const bondExists = state.bonds.some(
-        (b) =>
-          (b.atom1Id === action.payload.atom1Id && b.atom2Id === action.payload.atom2Id) ||
-          (b.atom1Id === action.payload.atom2Id && b.atom2Id === action.payload.atom1Id)
-      );
-      if (bondExists) {
-        return state;
-      }
-
       const atom1 = state.atoms.find((a) => a.id === action.payload.atom1Id);
       const atom2 = state.atoms.find((a) => a.id === action.payload.atom2Id);
       if (!atom1 || !atom2) return state;
+
+      // Validate if bond can be formed
+      const validation = canFormBond(atom1, atom2, state.bonds);
+      if (!validation.canForm) {
+        return state; // Don't form bond if validation fails
+      }
 
       const bondInfo = validateBond(atom1.element, atom2.element);
       const bondOrder = calculateBondOrder(
@@ -154,6 +151,23 @@ const update = (state: BondingState, action: BondingAction): BondingState => {
     }
 
     case 'SET_BOND_ORDER': {
+      const bond = state.bonds.find((b) => b.id === action.payload.bondId);
+      if (!bond) return state;
+
+      const atom1 = state.atoms.find((a) => a.id === bond.atom1Id);
+      const atom2 = state.atoms.find((a) => a.id === bond.atom2Id);
+      if (!atom1 || !atom2) return state;
+
+      // Validate bond order change
+      // Allow decreasing bond order or same order
+      // Only prevent if trying to increase beyond limits
+      if (action.payload.order > bond.order) {
+        const validation = canIncreaseBondOrder(bond, state.atoms, state.bonds);
+        if (!validation.canIncrease) {
+          return state; // Don't change if validation fails
+        }
+      }
+
       return {
         ...state,
         bonds: state.bonds.map((b) =>
