@@ -10,6 +10,7 @@ const EquationBuilder = () => {
   const { reactants, products, dispatch } = useEquationsStore();
   const [reactantInput, setReactantInput] = useState('');
   const [productInput, setProductInput] = useState('');
+  const [dragOverTarget, setDragOverTarget] = useState<'reactants' | 'products' | null>(null);
 
   const addReactant = () => {
     if (reactantInput.trim()) {
@@ -25,12 +26,54 @@ const EquationBuilder = () => {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, compound: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', compound);
+  };
+
+  const handleDragEnd = () => {
+    setDragOverTarget(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, target: 'reactants' | 'products') => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverTarget(target);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverTarget(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, target: 'reactants' | 'products') => {
+    e.preventDefault();
+    setDragOverTarget(null);
+    
+    const compound = e.dataTransfer.getData('text/plain');
+    if (compound) {
+      if (target === 'reactants') {
+        dispatch({ type: 'ADD_REACTANT', payload: compound });
+      } else {
+        dispatch({ type: 'ADD_PRODUCT', payload: compound });
+      }
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Equation Builder</h3>
 
       {/* Reactants */}
-      <div className="mb-6">
+      <div
+        className={`mb-6 p-4 rounded-lg border-2 transition-colors ${
+          dragOverTarget === 'reactants'
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-transparent'
+        }`}
+        onDragOver={(e) => handleDragOver(e, 'reactants')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, 'reactants')}
+      >
         <label className="block text-sm font-medium text-gray-700 mb-2">Reactants</label>
         <div className="flex gap-2 mb-2">
           <input
@@ -68,6 +111,9 @@ const EquationBuilder = () => {
             </div>
           ))}
         </div>
+        {dragOverTarget === 'reactants' && (
+          <p className="text-sm text-blue-600 mt-2 text-center">Drop here to add as reactant</p>
+        )}
       </div>
 
       {/* Arrow */}
@@ -76,7 +122,16 @@ const EquationBuilder = () => {
       </div>
 
       {/* Products */}
-      <div className="mb-6">
+      <div
+        className={`mb-6 p-4 rounded-lg border-2 transition-colors ${
+          dragOverTarget === 'products'
+            ? 'border-green-500 bg-green-50'
+            : 'border-transparent'
+        }`}
+        onDragOver={(e) => handleDragOver(e, 'products')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, 'products')}
+      >
         <label className="block text-sm font-medium text-gray-700 mb-2">Products</label>
         <div className="flex gap-2 mb-2">
           <input
@@ -114,19 +169,27 @@ const EquationBuilder = () => {
             </div>
           ))}
         </div>
+        {dragOverTarget === 'products' && (
+          <p className="text-sm text-green-600 mt-2 text-center">Drop here to add as product</p>
+        )}
       </div>
 
       {/* Common Compounds */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Common Compounds</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Common Compounds <span className="text-xs text-gray-500">(drag to reactants or products)</span>
+        </label>
         <div className="flex flex-wrap gap-2">
           {COMMON_COMPOUNDS.map((compound) => (
             <button
               key={compound}
+              draggable
+              onDragStart={(e) => handleDragStart(e, compound)}
+              onDragEnd={handleDragEnd}
               onClick={() => {
                 setReactantInput(compound);
               }}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm transition-colors"
+              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm transition-colors cursor-grab active:cursor-grabbing"
             >
               {compound}
             </button>
